@@ -31,6 +31,7 @@ export type PreBuiltState = z.infer<typeof PreBuiltState>;
 export const PREBUILT_AGENTS = [
     'meeting-prep',
     'email-draft',
+    'create-deck',
 ] as const;
 
 export type PreBuiltAgentName = typeof PREBUILT_AGENTS[number];
