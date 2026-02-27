@@ -8,6 +8,7 @@ const COMMAND_SPLIT_REGEX = /(?:\|\||&&|;|\||\n|`|\$\(|\(|\))/;
 const ENV_ASSIGNMENT_REGEX = /^[A-Za-z_][A-Za-z0-9_]*=.*/;
 const WRAPPER_COMMANDS = new Set(['sudo', 'env', 'time', 'command']);
 const EXECUTION_SHELL = getExecutionShell();
+const DEFAULT_MAX_BUFFER = 1024 * 1024; // 1MB
 
 function sanitizeToken(token: string): string {
   return token.trim().replace(/^['"()]+|['"()]+$/g, '');
@@ -86,7 +87,7 @@ export async function executeCommand(
     const { stdout, stderr } = await execPromise(command, {
       cwd: options?.cwd,
       timeout: options?.timeout,
-      maxBuffer: options?.maxBuffer || 1024 * 1024, // default 1MB
+      maxBuffer: options?.maxBuffer || DEFAULT_MAX_BUFFER,
       shell: EXECUTION_SHELL,
     });
 
@@ -175,13 +176,13 @@ export function executeCommandAbortable(
 
     // Collect output
     proc.stdout?.on('data', (chunk: Buffer) => {
-      const maxBuffer = options?.maxBuffer || 1024 * 1024;
+      const maxBuffer = options?.maxBuffer || DEFAULT_MAX_BUFFER;
       if (stdout.length < maxBuffer) {
         stdout += chunk.toString();
       }
     });
     proc.stderr?.on('data', (chunk: Buffer) => {
-      const maxBuffer = options?.maxBuffer || 1024 * 1024;
+      const maxBuffer = options?.maxBuffer || DEFAULT_MAX_BUFFER;
       if (stderr.length < maxBuffer) {
         stderr += chunk.toString();
       }

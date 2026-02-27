@@ -99,6 +99,22 @@ function getVersions(): {
 }
 
 // ============================================================================
+// Renderer IPC Utilities
+// ============================================================================
+
+/**
+ * Send an IPC event to all active renderer windows.
+ * Skips destroyed windows and windows without webContents.
+ */
+function sendToAllWindows(channel: string, payload: unknown): void {
+  for (const win of BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed() && win.webContents) {
+      win.webContents.send(channel, payload);
+    }
+  }
+}
+
+// ============================================================================
 // Workspace Watcher (with debouncing and lifecycle management)
 // ============================================================================
 
@@ -110,24 +126,14 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
  * Emit knowledge commit event to all renderer windows
  */
 function emitKnowledgeCommitEvent(): void {
-  const windows = BrowserWindow.getAllWindows();
-  for (const win of windows) {
-    if (!win.isDestroyed() && win.webContents) {
-      win.webContents.send('knowledge:didCommit', {});
-    }
-  }
+  sendToAllWindows('knowledge:didCommit', {});
 }
 
 /**
  * Emit workspace change event to all renderer windows
  */
 function emitWorkspaceChangeEvent(event: z.infer<typeof workspaceShared.WorkspaceChangeEvent>): void {
-  const windows = BrowserWindow.getAllWindows();
-  for (const win of windows) {
-    if (!win.isDestroyed() && win.webContents) {
-      win.webContents.send('workspace:didChange', event);
-    }
-  }
+  sendToAllWindows('workspace:didChange', event);
 }
 
 /**
@@ -227,30 +233,15 @@ export function stopWorkspaceWatcher(): void {
 }
 
 function emitRunEvent(event: z.infer<typeof RunEvent>): void {
-  const windows = BrowserWindow.getAllWindows();
-  for (const win of windows) {
-    if (!win.isDestroyed() && win.webContents) {
-      win.webContents.send('runs:events', event);
-    }
-  }
+  sendToAllWindows('runs:events', event);
 }
 
 function emitServiceEvent(event: z.infer<typeof ServiceEvent>): void {
-  const windows = BrowserWindow.getAllWindows();
-  for (const win of windows) {
-    if (!win.isDestroyed() && win.webContents) {
-      win.webContents.send('services:events', event);
-    }
-  }
+  sendToAllWindows('services:events', event);
 }
 
 export function emitOAuthEvent(event: { provider: string; success: boolean; error?: string }): void {
-  const windows = BrowserWindow.getAllWindows();
-  for (const win of windows) {
-    if (!win.isDestroyed() && win.webContents) {
-      win.webContents.send('oauth:didConnect', event);
-    }
-  }
+  sendToAllWindows('oauth:didConnect', event);
 }
 
 let runsWatcher: (() => void) | null = null;

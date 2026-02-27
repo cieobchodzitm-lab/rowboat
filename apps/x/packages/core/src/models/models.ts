@@ -12,6 +12,11 @@ import z from "zod";
 export const Provider = LlmProvider;
 export const ModelConfig = LlmModelConfig;
 
+/** Timeout for local providers (e.g. Ollama) which may be slower to respond */
+const LOCAL_PROVIDER_TIMEOUT_MS = 60_000;
+/** Timeout for remote providers (e.g. OpenAI, Anthropic) */
+const REMOTE_PROVIDER_TIMEOUT_MS = 8_000;
+
 export function createProvider(config: z.infer<typeof Provider>): ProviderV2 {
     const { apiKey, baseURL, headers } = config;
     switch (config.flavor) {
@@ -74,7 +79,7 @@ export async function testModelConnection(
     timeoutMs?: number,
 ): Promise<{ success: boolean; error?: string }> {
     const isLocal = providerConfig.flavor === "ollama" || providerConfig.flavor === "openai-compatible";
-    const effectiveTimeout = timeoutMs ?? (isLocal ? 60000 : 8000);
+    const effectiveTimeout = timeoutMs ?? (isLocal ? LOCAL_PROVIDER_TIMEOUT_MS : REMOTE_PROVIDER_TIMEOUT_MS);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), effectiveTimeout);
     try {
