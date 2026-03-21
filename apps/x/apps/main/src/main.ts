@@ -27,6 +27,9 @@ const __dirname = dirname(__filename);
 // run this as early in the main process as possible
 if (started) app.quit();
 
+const DEV_SERVER_URL = "http://localhost:5173";
+const PROD_APP_URL = "app://-/index.html";
+
 // Path resolution differs between development and production:
 const preloadPath = app.isPackaged
   ? path.join(__dirname, "../preload/dist/preload.js")
@@ -104,7 +107,7 @@ function createWindow() {
   // Handle navigation to external URLs (e.g., clicking a link without target="_blank")
   win.webContents.on("will-navigate", (event, url) => {
     const isInternal =
-      url.startsWith("app://") || url.startsWith("http://localhost:5173");
+      url.startsWith("app://") || url.startsWith(DEV_SERVER_URL);
     if (!isInternal) {
       event.preventDefault();
       shell.openExternal(url);
@@ -112,9 +115,9 @@ function createWindow() {
   });
 
   if (app.isPackaged) {
-    win.loadURL("app://-/index.html");
+    win.loadURL(PROD_APP_URL);
   } else {
-    win.loadURL("http://localhost:5173");
+    win.loadURL(DEV_SERVER_URL);
   }
 }
 
